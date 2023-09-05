@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   //final TextEditingController _inputController = TextEditingController();
   String _prediction = '';
+  double _confidence = 0.0;
   File? _selectedImage;
 
   Future<void> _makePrediction() async {
@@ -41,6 +43,8 @@ class _MyAppState extends State<MyApp> {
         final data = jsonDecode(response.body);
         setState(() {
           _prediction = data['predicted_class'];
+          _confidence = data['confidence'];
+
           // _confidence = data['confidence'];
         });
       } else {
@@ -59,7 +63,8 @@ class _MyAppState extends State<MyApp> {
     if (result != null) {
       setState(() {
         _selectedImage = File(result.files.single.path!);
-        _prediction = ''; // Clear any previous prediction.
+        _prediction = '';
+        _confidence; // Clear any previous prediction.
       });
     }
   }
@@ -69,34 +74,44 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Image Classifier App'),
+          title: Center(child: const Text('Image Classifier App')),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ElevatedButton(
-                onPressed: _selectImage,
-                child: const Text('Select Image'),
-              ),
-              const SizedBox(height: 20),
-              if (_selectedImage != null)
-                Image.file(
-                  _selectedImage!,
-                  height: 200,
-                  width: 200,
-                )
-              else
-                const Text('No image selected.'),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _makePrediction,
-                child: const Text('Get Prediction'),
-              ),
-              const SizedBox(height: 20),
-              Text('Prediction: $_prediction'),
-            ],
+          child: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _selectImage,
+                    child: const Text('Select Image'),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (_selectedImage != null)
+                  Center(
+                    child: Image.file(
+                      _selectedImage!,
+                      height: 200,
+                      width: 200,
+                    ),
+                  )
+                else
+                  Center(child: const Text('No image selected.')),
+                Center(child: SizedBox(height: 20)),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _makePrediction,
+                    child: const Text('Get Prediction'),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Center(
+                    child: Text(
+                        'Prediction: $_prediction \nConfidence level: $_confidence')),
+              ],
+            ),
           ),
         ),
       ),
