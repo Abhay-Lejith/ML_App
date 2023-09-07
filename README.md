@@ -20,10 +20,10 @@ Leveraging machine learning techniques, our classifier is proficient in identify
 Designed with both healthcare professionals and patients in mind, the app boasts an intuitive, easy-to-navigate interface, ensuring accessibility to a wide audience.
 ## Working
 
-`Image Selection`: Upon launching the app, users are presented with a clear and intuitive interface made using flutter. They are prompted to choose between MRI or fundus images, each accessible through dedicated screens. This choice flexibility ensures that the app caters to diverse medical imaging needs.
-`Image Submission`: After selecting the image type (MRI or fundus), users can upload their medical images directly from their device's gallery. The app simplifies the process, making it accessible to users of all technical backgrounds.
-`Flask API Integration`: Behind the scenes, our Flask API serves as the bridge between the app and the machine learning model. When an image is submitted, the app communicates with the Flask API, sending the image for analysis.
-`Machine Learning Inference`: The Flask API routes the received image to the machine learning model, which has been pre-trained to recognize diseases and conditions specific to MRI or fundus images. The model performs a comprehensive analysis of the image, identifying potential diseases and anomalies.
-`Inference Report`: The app then presents the user with an inference report. This report includes the disease or condition identified, along with confidence levels to provide an indication of the model's certainty in its diagnosis. Users can review this information and take appropriate actions, such as seeking medical advice or further testing.
+`Image Selection`: Upon launching the app, users are presented with a clear and intuitive interface made using flutter. They are prompted to choose between MRI or fundus images, each accessible through dedicated screens. This choice flexibility ensures that the app caters to diverse medical imaging needs.__
+`Image Submission`: After selecting the image type (MRI or fundus), users can upload their medical images directly from their device's gallery. The app simplifies the process, making it accessible to users of all technical backgrounds.__
+`Flask API Integration`: Behind the scenes, our Flask API serves as the bridge between the app and the machine learning model. When an image is submitted, the app communicates with the Flask API, sending the image for analysis.__
+`Machine Learning Inference`: The Flask API routes the received image to the machine learning model, which has been pre-trained to recognize diseases and conditions specific to MRI or fundus images. The model performs a comprehensive analysis of the image, identifying potential diseases and anomalies.__
+`Inference Report`: The app then presents the user with an inference report. This report includes the disease or condition identified, along with confidence levels to provide an indication of the model's certainty in its diagnosis. Users can review this information and take appropriate actions, such as seeking medical advice or further testing.__
 
 
