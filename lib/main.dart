@@ -69,55 +69,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _prediction = '';
-  double _confidence = 0.0;
-  File? _selectedImage;
-
-  Future<void> _makePrediction() async {
-    if (_selectedImage == null) {
-      print('No image selected.');
-      return;
-    }
-
-    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict');
-
-    try {
-      final List<int> imageBytes = _selectedImage!.readAsBytesSync();
-
-      final response = await http.post(
-        apiUrl,
-        body: jsonEncode({'image_bytes': base64Encode(imageBytes)}),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _prediction = data['predicted_class'];
-          _confidence = data['confidence'];
-        });
-      } else {
-        throw Exception('Failed to make a prediction.');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
-  Future<void> _selectImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-    );
-
-    if (result != null) {
-      setState(() {
-        _selectedImage = File(result.files.single.path!);
-        _prediction = '';
-        _confidence; // Clear any previous prediction.
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Center(

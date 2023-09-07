@@ -1,2 +1,15 @@
-0 Class 1
-1 Class 2
+0 Macular Hole
+1 Possible Glaucoma
+2 Optic Atrophy
+3 Normal
+4 Mild-Moderate Non Proliferative Diabetic Retinopathy
+5 Congenital Disc Abnormality
+6 Rhegmatogenous RD
+7 Retinal Artery Occlusion
+8 Central Retinal Vein Occlusion
+9 Branched Retinal Vein Occlusion
+10 Peripheral Retinal Degeneration
+11 Retinitis Pigmentosa
+12 Severe Hypertensive Retinopathy
+13 Severe Non Proliferative Diabetic Retinopathy 
+14 Proliferative Diabetic Retinopathy
