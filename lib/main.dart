@@ -465,13 +465,13 @@ class AboutReferencePage extends StatelessWidget {
               ),
             ),
             Text(
-              '1) https://www.kaggle.com/datasets/linchundan/fundusimage1000',
+              '1) "Automatic detection of 39 fundus diseases and conditions in retinal photographs using deep neural networks"\n https://www.nature.com/articles/s41467-021-25138-w',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Text('   -our model was trained using this dataset'),
+            Text('   -our fundus AI model was trained using this dataset'),
             Text(
               '2) https://teachablemachine.withgoogle.com/train/image',
               style: TextStyle(
