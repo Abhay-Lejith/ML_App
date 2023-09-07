@@ -27,9 +27,10 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: const Text('Image Classifier App')),
+          title: Center(child: const Text('MediPal Lens PRO')),
         ),
         body: IndexedStack(
           index: _currentIndex,
@@ -39,6 +40,7 @@ class _MyAppState extends State<MyApp> {
             MRIScreen(),
           ],
         ),
+        drawer: NavigationDrawer(),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
@@ -48,7 +50,7 @@ class _MyAppState extends State<MyApp> {
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.medical_services),
+              icon: Icon(Icons.remove_red_eye),
               label: 'Fundus',
             ),
             BottomNavigationBarItem(
@@ -123,26 +125,21 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          ElevatedButton(
-            onPressed: _selectImage,
-            child: const Text('Select Image'),
+          Text(
+            'MediPal Lens PRO',
+            style: TextStyle(
+              fontSize: 40, // Set your desired font size
+              fontWeight: FontWeight.bold, // You can customize the style
+              color: Colors.red,
+            ),
           ),
-          const SizedBox(height: 20),
-          if (_selectedImage != null)
-            Image.file(
-              _selectedImage!,
-              height: 200,
-              width: 200,
-            )
-          else
-            const Text('No image selected.'),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _makePrediction,
-            child: const Text('Get Prediction'),
-          ),
-          const SizedBox(height: 20),
-          Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+          // Text(
+          //   "\n\nThe 'MediPal LENS PRO' app is a powerful tool for doctors, leveraging advanced machine learning algorithms\n to analyze patient data, medical images, and symptoms. It aids in the rapid and accurate\nidentification of diseases, providing real-time diagnostic insights, treatment recommendations, \nand relevant medical literature, enhancing clinical decision-making and patient care.",
+          //   style: TextStyle(
+          //     fontSize: 18, // Set your desired font size
+          //     color: Colors.blue,
+          //   ),
+          // )
         ],
       ),
     );
@@ -335,6 +332,214 @@ class _MRIScreenState extends State<MRIScreen> {
           const SizedBox(height: 20),
           Text('Prediction: $_prediction \nConfidence level: $_confidence'),
         ],
+      ),
+    );
+  }
+}
+
+class NavigationDrawer extends StatefulWidget {
+  @override
+  _NavigationDrawerScreen createState() => _NavigationDrawerScreen();
+}
+
+class _NavigationDrawerScreen extends State<NavigationDrawer> {
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: Text(
+              'More',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.info),
+            title: Text('About App'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => AboutAppPage()),
+              );
+              // Navigate to the about page or perform an action.
+              // Add your code here.
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.help),
+            title: Text('Help'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => AboutHelpPage()),
+              );
+              // Navigate to the help page or perform an action.
+              // Add your code here.
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.library_books),
+            title: Text('References'),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => AboutReferencePage()),
+              );
+              // Navigate to the references page or perform an action.
+              // Add your code here.
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AboutAppPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('About App'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'MediPal Lens PRO',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Version: 1.0.0',
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Description:',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "\n\nThe 'MediPal LENS PRO' app is a powerful tool for doctors, leveraging advanced machine learning algorithms\n to analyze patient data, medical images, and symptoms. It aids in the rapid and accurate\nidentification of diseases, providing real-time diagnostic insights, treatment recommendations, \nand relevant medical literature, enhancing clinical decision-making and patient care.",
+              style: TextStyle(
+                fontSize: 18, // Set your desired font size
+                color: Colors.blue,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Our Incredible Team:',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Abhay Lejith',
+              style: TextStyle(
+                fontSize: 18, // Set your desired font size
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Center(
+              child: Text(
+                "Shreesha M",
+                style: TextStyle(
+                  fontSize: 18, // Set your desired font size
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AboutHelpPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Help'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [Text('Help')],
+        ),
+      ),
+    );
+  }
+}
+
+class AboutReferencePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Help'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '\References\n\n',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              '1) https://www.kaggle.com/datasets/linchundan/fundusimage1000',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text('   -our model was trained using this dataset'),
+            Text(
+              '2) https://teachablemachine.withgoogle.com/train/image',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text('   -our model was trained using teachable machine'),
+            Text(
+              '3) https://docs.flutter.dev/ ',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text('   -our application was built using Flutter'),
+          ],
+        ),
       ),
     );
   }
