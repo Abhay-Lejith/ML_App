@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
 
 void main() {
   runApp(MyApp());
@@ -29,7 +30,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: const Text('MediPal Lens PRO')),
+          title: const Center(child: Text('MediPal Lens PRO')),
         ),
         body: IndexedStack(
           index: _currentIndex,
@@ -43,7 +44,7 @@ class _MyAppState extends State<MyApp> {
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
-          items: [
+          items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
@@ -137,17 +138,84 @@ class _FundusScreenState extends State<FundusScreen> {
     }
   }
 
+  FilePickerResult? result;
   Future<void> _selectImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    result = await FilePicker.platform.pickFiles(
       type: FileType.image,
     );
 
     if (result != null) {
       setState(() {
-        _selectedImage = File(result.files.single.path!);
+        _selectedImage = File(result!.files.single.path!);
         _prediction = '';
         _confidence; // Clear any previous prediction.
       });
+    }
+  }
+
+  //Below is code to select save location and generate pdf
+
+  Future<String?> pickSaveLocation() async {
+    String? saveloc = await FilePicker.platform.saveFile(
+      fileName: 'Fundus_Report.pdf',
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    return saveloc;
+  }
+
+  Future<void> generatePDFWithContent(
+      FilePickerResult? result1, String prediction, double confidence) async {
+    final pdf = pw.Document();
+
+    // Create the premade PDF template.
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          // Define a list to hold the content.
+          final List<pw.Widget> content = [
+            // Static content
+            pw.Text('Sample Report'),
+
+            // Insert the prediction and confidence
+            pw.Text('Prediction: $prediction'),
+            pw.Text('Confidence: $confidence'),
+          ];
+
+          // Customize PDF content based on prediction
+          if (prediction == 'Retinitis Pigmentosa') {
+            content.add(pw.Text('Additional content for Class A'));
+          } else if (prediction == 'Class B') {
+            content.add(pw.Text('Additional content for Class B'));
+          }
+          // Add more conditions based on your predictions
+
+          // Insert the selected image into the PDF
+          if (result1 != null && result1.files.isNotEmpty) {
+            final imageFile = result1.files.first;
+
+            // final imageData = imageFile.bytes?.toList() ?? <int>[];
+            final Uint8List imageData = imageFile.bytes!;
+            content.add(pw.Image(pw.MemoryImage(imageData)));
+            //.add(pw.Image(pw.MemoryImage(Uint8List.fromList(imageData))));
+          }
+
+          // Create a column containing all the content.
+          return pw.Column(
+            children: content,
+          );
+        },
+      ),
+    );
+
+    // Get the document directory to save the PDF.
+    final directory = await pickSaveLocation();
+    if (directory != null) {
+      final filePath = directory;
+
+      // Save the PDF to the device's file system.
+      final file = File(filePath);
+      await file.writeAsBytes(await pdf.save());
     }
   }
 
@@ -157,7 +225,7 @@ class _FundusScreenState extends State<FundusScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Center(
+          const Center(
             child: Text(
               'Fundus Image Classifier',
               style: TextStyle(
@@ -186,6 +254,12 @@ class _FundusScreenState extends State<FundusScreen> {
           ),
           const SizedBox(height: 20),
           Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+          const SizedBox(height: 40),
+          ElevatedButton(
+            onPressed: () =>
+                generatePDFWithContent(result, _prediction, _confidence),
+            child: const Text('Generate and Download report'),
+          ),
         ],
       ),
     );
