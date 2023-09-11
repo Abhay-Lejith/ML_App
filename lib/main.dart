@@ -29,7 +29,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: const Text('MediPal Lens PRO')),
+          title: Center(child: const Text('DiagnoTech')),
         ),
         body: IndexedStack(
           index: _currentIndex,
@@ -76,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            'MediPal Lens PRO',
+            'DiagnoTech',
             style: TextStyle(
               fontSize: 40, // Set your desired font size
               fontWeight: FontWeight.bold, // You can customize the style
@@ -386,7 +386,7 @@ class AboutAppPage extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Text(
-              "\n\nThe 'MediPal LENS PRO' app is a powerful tool for doctors, leveraging advanced machine learning algorithms\n to analyze patient data, medical images, and symptoms. It aids in the rapid and accurate\nidentification of diseases, providing real-time diagnostic insights, treatment recommendations, \nand relevant medical literature, enhancing clinical decision-making and patient care.",
+              "\n\nThe 'DiagnoTech' app is a powerful tool for doctors, leveraging advanced machine learning algorithms\n to analyze patient data, medical images, and symptoms. It aids in the rapid and accurate\nidentification of diseases, providing real-time diagnostic insights, treatment recommendations, \nand relevant medical literature, enhancing clinical decision-making and patient care.",
               style: TextStyle(
                 fontSize: 18, // Set your desired font size
                 color: Colors.blue,
