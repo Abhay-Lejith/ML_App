@@ -112,7 +112,7 @@ class _FundusScreenState extends State<FundusScreen> {
       return;
     }
 
-    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict');
+    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict/fundus');
 
     try {
       final List<int> imageBytes = _selectedImage!.readAsBytesSync();
@@ -207,7 +207,7 @@ class _MRIScreenState extends State<MRIScreen> {
       return;
     }
 
-    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict');
+    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict/xray');
 
     try {
       final List<int> imageBytes = _selectedImage!.readAsBytesSync();
