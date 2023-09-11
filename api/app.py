@@ -8,21 +8,19 @@ from PIL import Image,ImageOps
 
 app = Flask(__name__)
 
-class_labels = []
 
-with open('labels.txt', 'r') as file:
-    for line in file:
-        parts = line.strip().split()
-        if len(parts) > 1:
-            class_labels.append(' '.join(parts[1:]))
 
-# Load your pre-trained machine learning model here.
-# Replace 'your_model.h5' with the actual filename of your model.
-model = load_model('keras_model.h5')
-
-@app.route('/predict', methods=['POST'])
-def predict():
+def predict_fundus():
     try:
+        class_labels = []
+
+        with open('labels.txt', 'r') as file:
+            for line in file:
+                parts = line.strip().split()
+                if len(parts) > 1:
+                    class_labels.append(' '.join(parts[1:]))
+
+        model = load_model('keras_model.h5')
         # Receive image data as base64 and decode it.
         data = request.json.get('image_bytes')
         image_bytes = base64.b64decode(data)
@@ -47,11 +45,6 @@ def predict():
         # Make predictions with your model.
         predictions = model.predict(data)
 
-        # Process the predictions and return them.
-        # Example:
-        # class_labels = ['class1', 'class2', 'class3']
-        # predicted_class = class_labels[np.argmax(predictions)]
-        # confidence = np.max(predictions)
         predicted_class_index = np.argmax(predictions)
 
         predicted_class_name = class_labels[predicted_class_index]
@@ -69,6 +62,66 @@ def predict():
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+def predict_xray():
+    try:
+        class_labels = []
+
+        with open('xray_labels.txt', 'r') as file:
+            for line in file:
+                parts = line.strip().split()
+                if len(parts) > 1:
+                    class_labels.append(' '.join(parts[1:]))
+
+        model = load_model('xray_model.h5')
+        # Receive image data as base64 and decode it.
+        data = request.json.get('image_bytes')
+        image_bytes = base64.b64decode(data)
+
+        # Convert to PIL Image.
+        image = Image.open(BytesIO(image_bytes))
+
+        if image.mode != 'L':
+            image = image.convert('L')
+        
+        image = ImageOps.fit(image, (128,128))
+        data = np.ndarray(shape=(1, 128, 128, 1), dtype=np.float32)
+        
+        image = np.asarray(image)
+        image = np.expand_dims(image, axis=-1)
+    
+
+        data[0] = image
+
+        # Make predictions with your model.
+        predictions = model.predict(data)
+
+        predicted_class_index = np.argmax(predictions)
+
+        predicted_class_name = class_labels[predicted_class_index]
+
+        confidence = float(predictions[0][predicted_class_index])
+
+        response = {
+            'predicted_class': predicted_class_name,
+            'confidence': confidence,
+        }
+
+
+        return jsonify(response)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/predict/<string:img>', methods=['POST'])
+def predict(img):
+    if(img == 'fundus'):
+        response = predict_fundus()
+    elif(img == 'xray'):
+        response = predict_xray()
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)
