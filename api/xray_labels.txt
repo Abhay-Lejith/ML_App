@@ -12,3 +12,4 @@
 11 Pleural_Thickening
 12 Pneumonia
 13 Pneumothorax
+14 No_Finding

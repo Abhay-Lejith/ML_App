@@ -5,6 +5,10 @@ import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image,ImageOps
+from skimage import io,transform
+from skimage.transform import resize
+from skimage.exposure import equalize_adapthist
+from PIL import ImageOps
 
 app = Flask(__name__)
 
@@ -73,38 +77,53 @@ def predict_xray():
                 if len(parts) > 1:
                     class_labels.append(' '.join(parts[1:]))
 
-        model = load_model('xray_model.h5')
+        model = load_model('xray_model_v2.h5')
         # Receive image data as base64 and decode it.
         data = request.json.get('image_bytes')
         image_bytes = base64.b64decode(data)
 
         # Convert to PIL Image.
         image = Image.open(BytesIO(image_bytes))
-
+    
+        # Ensure image is in grayscale mode
         if image.mode != 'L':
             image = image.convert('L')
         
+        # Resize the image to (128, 128)
         image = ImageOps.fit(image, (128,128))
-        data = np.ndarray(shape=(1, 128, 128, 1), dtype=np.float32)
         
-        image = np.asarray(image)
+        # Apply CLAHE to enhance contrast (consistent with training)
+        image = equalize_adapthist(np.asarray(image))
+        
+        # Convert the image to a numpy array and expand dimensions
         image = np.expand_dims(image, axis=-1)
-    
-
+        
+        # Prepare the data array
+        data = np.ndarray(shape=(1, 128, 128, 1), dtype=np.float32)
         data[0] = image
-
+        
         # Make predictions with your model.
         predictions = model.predict(data)
 
-        predicted_class_index = np.argmax(predictions)
+        # Sort the predictions in descending order
+        sorted_predictions = np.argsort(predictions[0])[::-1]
 
-        predicted_class_name = class_labels[predicted_class_index]
+        # Get the top two predicted class indices and their corresponding confidence levels
+        top1_class_index = sorted_predictions[0]
+        top2_class_index = sorted_predictions[1]
 
-        confidence = float(predictions[0][predicted_class_index])
+        top1_class = class_labels[top1_class_index]
+        top2_class = class_labels[top2_class_index]
+
+        confidence_1 = float(predictions[0][top1_class_index])
+        confidence_2 = float(predictions[0][top2_class_index])
+
 
         response = {
-            'predicted_class': predicted_class_name,
-            'confidence': confidence,
+            'predicted_class_1': top1_class,
+            'predicted_class_2':top2_class,
+            'confidence_1': confidence_1,
+            'confidence_2': confidence_2,
         }
 
 
