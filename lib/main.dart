@@ -197,8 +197,11 @@ class MRIScreen extends StatefulWidget {
 }
 
 class _MRIScreenState extends State<MRIScreen> {
-  String _prediction = '';
-  double _confidence = 0.0;
+  String _prediction1 = '';
+  double _confidence1 = 0.0;
+  String _prediction2 = '';
+  double _confidence2 = 0.0;
+
   File? _selectedImage;
 
   Future<void> _makePrediction() async {
@@ -221,8 +224,10 @@ class _MRIScreenState extends State<MRIScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _prediction = data['predicted_class'];
-          _confidence = data['confidence'];
+          _prediction1 = data['predicted_class_1'];
+          _confidence1 = data['confidence_1'];
+          _prediction2 = data['predicted_class_2'];
+          _confidence2 = data['confidence_2'];
         });
       } else {
         throw Exception('Failed to make a prediction.');
@@ -240,8 +245,10 @@ class _MRIScreenState extends State<MRIScreen> {
     if (result != null) {
       setState(() {
         _selectedImage = File(result.files.single.path!);
-        _prediction = '';
-        _confidence; // Clear any previous prediction.
+        _prediction1 = '';
+        _confidence1;
+        _prediction2 = '';
+        _confidence2; // Clear any previous prediction.
       });
     }
   }
@@ -280,7 +287,8 @@ class _MRIScreenState extends State<MRIScreen> {
             child: const Text('Get Prediction'),
           ),
           const SizedBox(height: 20),
-          Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+          Text('Prediction 1: $_prediction1 \nConfidence level: $_confidence1'),
+          Text('Prediction 2: $_prediction2 \nConfidence level: $_confidence2'),
         ],
       ),
     );
