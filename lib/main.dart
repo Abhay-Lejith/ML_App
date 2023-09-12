@@ -203,7 +203,10 @@ class _FundusScreenState extends State<FundusScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+              width: 100,
+            ),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(labelText: 'Name'),
@@ -426,7 +429,10 @@ class _XRayScreenState extends State<XRayScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+              width: 100,
+            ),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(labelText: 'Name'),
