@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
           children: [
             HomeScreen(),
             FundusScreen(),
-            MRIScreen(),
+            XRayScreen(),
           ],
         ),
         drawer: NavigationDrawer(),
@@ -67,7 +67,7 @@ class _MyAppState extends State<MyApp> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.science),
-              label: 'MRI',
+              label: 'Chest X-Ray',
             ),
           ],
         ),
@@ -333,11 +333,11 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 }
 
-class MRIScreen extends StatefulWidget {
-  _MRIScreenState createState() => _MRIScreenState();
+class XRayScreen extends StatefulWidget {
+  _XRayScreenState createState() => _XRayScreenState();
 }
 
-class _MRIScreenState extends State<MRIScreen> {
+class _XRayScreenState extends State<XRayScreen> {
   String _prediction = '';
   double _confidence = 0.0;
   File? _selectedImage;
@@ -406,7 +406,7 @@ class _MRIScreenState extends State<MRIScreen> {
       appBar: AppBar(
         title: Center(
           child: const Text(
-            'MRI Image Classifier',
+            'Chest X-Ray Image Classifier',
             style: TextStyle(
               fontSize: 25, // Set your desired font size
               fontWeight: FontWeight.bold, // You can customize the style
