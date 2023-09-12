@@ -29,7 +29,14 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: const Text('DiagnoTech')),
+          title: Center(
+              child: const Text(
+            'DiagnoTech',
+            style: TextStyle(
+              fontSize: 35,
+              fontWeight: FontWeight.bold,
+            ),
+          )),
         ),
         body: IndexedStack(
           index: _currentIndex,
@@ -153,40 +160,44 @@ class _FundusScreenState extends State<FundusScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Text(
-              'Fundus Image Classifier',
-              style: TextStyle(
-                fontSize: 24, // Set your desired font size
-                fontWeight: FontWeight.bold, // You can customize the style
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(
+          child: const Text(
+            'Fundus Image Classifier',
+            style: TextStyle(
+              fontSize: 24, // Set your desired font size
+              fontWeight: FontWeight.bold, // You can customize the style
             ),
           ),
-          ElevatedButton(
-            onPressed: _selectImage,
-            child: const Text('Select Image'),
-          ),
-          const SizedBox(height: 20),
-          if (_selectedImage != null)
-            Image.file(
-              _selectedImage!,
-              height: 200,
-              width: 200,
-            )
-          else
-            const Text('No image selected.'),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _makePrediction,
-            child: const Text('Get Prediction'),
-          ),
-          const SizedBox(height: 20),
-          Text('Prediction: $_prediction \nConfidence level: $_confidence'),
-        ],
+        ),
+      ),
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: _selectImage,
+              child: const Text('Select Image'),
+            ),
+            const SizedBox(height: 20),
+            if (_selectedImage != null)
+              Image.file(
+                _selectedImage!,
+                height: 200,
+                width: 200,
+              )
+            else
+              const Text('No image selected.'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _makePrediction,
+              child: const Text('Get Prediction'),
+            ),
+            const SizedBox(height: 20),
+            Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+          ],
+        ),
       ),
     );
   }
@@ -248,40 +259,44 @@ class _MRIScreenState extends State<MRIScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Text(
-              'MRI Image Classifier',
-              style: TextStyle(
-                fontSize: 24, // Set your desired font size
-                fontWeight: FontWeight.bold, // You can customize the style
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(
+          child: const Text(
+            'MRI Image Classifier',
+            style: TextStyle(
+              fontSize: 25, // Set your desired font size
+              fontWeight: FontWeight.bold, // You can customize the style
             ),
           ),
-          ElevatedButton(
-            onPressed: _selectImage,
-            child: const Text('Select Image'),
-          ),
-          const SizedBox(height: 20),
-          if (_selectedImage != null)
-            Image.file(
-              _selectedImage!,
-              height: 200,
-              width: 200,
-            )
-          else
-            const Text('No image selected.'),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _makePrediction,
-            child: const Text('Get Prediction'),
-          ),
-          const SizedBox(height: 20),
-          Text('Prediction: $_prediction \nConfidence level: $_confidence'),
-        ],
+        ),
+      ),
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: _selectImage,
+              child: const Text('Select Image'),
+            ),
+            const SizedBox(height: 20),
+            if (_selectedImage != null)
+              Image.file(
+                _selectedImage!,
+                height: 200,
+                width: 200,
+              )
+            else
+              const Text('No image selected.'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _makePrediction,
+              child: const Text('Get Prediction'),
+            ),
+            const SizedBox(height: 20),
+            Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+          ],
+        ),
       ),
     );
   }
@@ -363,7 +378,7 @@ class AboutAppPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'MediPal Lens PRO',
+              'DiagnoTech',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
