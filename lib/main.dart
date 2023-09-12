@@ -1,11 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path/path.dart';
+//import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 
 void main() {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   runApp(MyApp());
 }
 
@@ -112,6 +118,10 @@ class _FundusScreenState extends State<FundusScreen> {
   String _prediction = '';
   double _confidence = 0.0;
   File? _selectedImage;
+  TextEditingController _nameController =
+      TextEditingController(); // Add name controller
+
+  final _databaseHelper = DatabaseHelper();
 
   Future<void> _makePrediction() async {
     if (_selectedImage == null) {
@@ -135,6 +145,8 @@ class _FundusScreenState extends State<FundusScreen> {
         setState(() {
           _prediction = data['predicted_class'];
           _confidence = data['confidence'];
+          final name = _nameController.text; // Get the user's name
+          _databaseHelper.insertData(name, _prediction, _confidence);
         });
       } else {
         throw Exception('Failed to make a prediction.');
@@ -158,6 +170,13 @@ class _FundusScreenState extends State<FundusScreen> {
     }
   }
 
+  Future<void> _navigateToHistoryPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HistoryPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -171,11 +190,24 @@ class _FundusScreenState extends State<FundusScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.history),
+            onPressed: () {
+              _navigateToHistoryPage(context);
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+            ),
             ElevatedButton(
               onPressed: _selectImage,
               child: const Text('Select Image'),
@@ -203,6 +235,104 @@ class _FundusScreenState extends State<FundusScreen> {
   }
 }
 
+class DatabaseHelper {
+  Database? _database;
+
+  Future<void> initializeDatabase() async {
+    if (_database == null) {
+      final dbPath = await getDatabasesPath();
+      //final documentsDirectory = await getApplicationDocumentsDirectory();
+      final databasePath = join(dbPath, 'Fundus.db');
+
+      _database = await openDatabase(
+        databasePath,
+        onCreate: (db, version) {
+          return db.execute(
+            'CREATE TABLE predictions(id INTEGER PRIMARY KEY, name TEXT, prediction TEXT, confidence REAL)',
+          );
+        },
+        version: 1,
+      );
+    }
+  }
+
+  Future<void> insertData(
+      String name, String prediction, double confidence) async {
+    final db = await database;
+    await db.insert(
+      'predictions',
+      {'name': name, 'prediction': prediction, 'confidence': confidence},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getPredictions() async {
+    final db = await database;
+    return db.query('predictions');
+  }
+
+  Future<void> close() async {
+    final db = await database;
+    db.close();
+  }
+
+  Future<Database> get database async {
+    if (_database == null) {
+      await initializeDatabase();
+    }
+    return _database!;
+  }
+}
+
+class HistoryPage extends StatefulWidget {
+  @override
+  _HistoryPageState createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  final _databaseHelper = DatabaseHelper();
+
+  List<Map<String, dynamic>> _historyData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistoryData();
+  }
+
+  Future<void> _loadHistoryData() async {
+    final history = await _databaseHelper.getPredictions();
+    setState(() {
+      _historyData = history;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Prediction History'),
+      ),
+      body: ListView.builder(
+        itemCount: _historyData.length,
+        itemBuilder: (context, index) {
+          final prediction = _historyData[index];
+          return ListTile(
+            title: Text('Name: ${prediction['name']}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prediction: ${prediction['prediction']}'),
+                Text('Confidence level: ${prediction['confidence']}'),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class MRIScreen extends StatefulWidget {
   _MRIScreenState createState() => _MRIScreenState();
 }
@@ -211,6 +341,10 @@ class _MRIScreenState extends State<MRIScreen> {
   String _prediction = '';
   double _confidence = 0.0;
   File? _selectedImage;
+  TextEditingController _nameController =
+      TextEditingController(); // Add name controller
+
+  final _databaseHelperX = DatabaseHelperX();
 
   Future<void> _makePrediction() async {
     if (_selectedImage == null) {
@@ -234,6 +368,8 @@ class _MRIScreenState extends State<MRIScreen> {
         setState(() {
           _prediction = data['predicted_class'];
           _confidence = data['confidence'];
+          final name = _nameController.text; // Get the user's name
+          _databaseHelperX.insertData(name, _prediction, _confidence);
         });
       } else {
         throw Exception('Failed to make a prediction.');
@@ -257,6 +393,13 @@ class _MRIScreenState extends State<MRIScreen> {
     }
   }
 
+  Future<void> _navigateToHistoryPageX(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HistoryPageX()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -270,11 +413,24 @@ class _MRIScreenState extends State<MRIScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.history),
+            onPressed: () {
+              _navigateToHistoryPageX(context);
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+            ),
             ElevatedButton(
               onPressed: _selectImage,
               child: const Text('Select Image'),
@@ -297,6 +453,104 @@ class _MRIScreenState extends State<MRIScreen> {
             Text('Prediction: $_prediction \nConfidence level: $_confidence'),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class DatabaseHelperX {
+  Database? _database;
+
+  Future<void> initializeDatabase() async {
+    if (_database == null) {
+      final dbPath = await getDatabasesPath();
+      //final documentsDirectory = await getApplicationDocumentsDirectory();
+      final databasePath = join(dbPath, 'ChestXRay.db');
+
+      _database = await openDatabase(
+        databasePath,
+        onCreate: (db, version) {
+          return db.execute(
+            'CREATE TABLE predictions(id INTEGER PRIMARY KEY, name TEXT, prediction TEXT, confidence REAL)',
+          );
+        },
+        version: 1,
+      );
+    }
+  }
+
+  Future<void> insertData(
+      String name, String prediction, double confidence) async {
+    final db = await database;
+    await db.insert(
+      'predictions',
+      {'name': name, 'prediction': prediction, 'confidence': confidence},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getPredictions() async {
+    final db = await database;
+    return db.query('predictions');
+  }
+
+  Future<void> close() async {
+    final db = await database;
+    db.close();
+  }
+
+  Future<Database> get database async {
+    if (_database == null) {
+      await initializeDatabase();
+    }
+    return _database!;
+  }
+}
+
+class HistoryPageX extends StatefulWidget {
+  @override
+  _HistoryPageStateX createState() => _HistoryPageStateX();
+}
+
+class _HistoryPageStateX extends State<HistoryPageX> {
+  final _databaseHelperX = DatabaseHelperX();
+
+  List<Map<String, dynamic>> _historyData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistoryData();
+  }
+
+  Future<void> _loadHistoryData() async {
+    final history = await _databaseHelperX.getPredictions();
+    setState(() {
+      _historyData = history;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Prediction History'),
+      ),
+      body: ListView.builder(
+        itemCount: _historyData.length,
+        itemBuilder: (context, index) {
+          final prediction = _historyData[index];
+          return ListTile(
+            title: Text('Name: ${prediction['name']}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prediction: ${prediction['prediction']}'),
+                Text('Confidence level: ${prediction['confidence']}'),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
