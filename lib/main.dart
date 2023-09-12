@@ -1,11 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path/path.dart';
+//import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 
 void main() {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   runApp(MyApp());
 }
 
@@ -29,14 +35,21 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: const Text('MediPal Lens PRO')),
+          title: Center(
+              child: const Text(
+            'DiagnoTech',
+            style: TextStyle(
+              fontSize: 35,
+              fontWeight: FontWeight.bold,
+            ),
+          )),
         ),
         body: IndexedStack(
           index: _currentIndex,
           children: [
             HomeScreen(),
             FundusScreen(),
-            MRIScreen(),
+            XRayScreen(),
           ],
         ),
         drawer: NavigationDrawer(),
@@ -54,7 +67,7 @@ class _MyAppState extends State<MyApp> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.science),
-              label: 'MRI',
+              label: 'Chest X-Ray',
             ),
           ],
         ),
@@ -76,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            'MediPal Lens PRO',
+            'DiagnoTech',
             style: TextStyle(
               fontSize: 40, // Set your desired font size
               fontWeight: FontWeight.bold, // You can customize the style
@@ -105,6 +118,10 @@ class _FundusScreenState extends State<FundusScreen> {
   String _prediction = '';
   double _confidence = 0.0;
   File? _selectedImage;
+  TextEditingController _nameController =
+      TextEditingController(); // Add name controller
+
+  final _databaseHelper = DatabaseHelper();
 
   Future<void> _makePrediction() async {
     if (_selectedImage == null) {
@@ -128,6 +145,8 @@ class _FundusScreenState extends State<FundusScreen> {
         setState(() {
           _prediction = data['predicted_class'];
           _confidence = data['confidence'];
+          final name = _nameController.text; // Get the user's name
+          _databaseHelper.insertData(name, _prediction, _confidence);
         });
       } else {
         throw Exception('Failed to make a prediction.');
@@ -151,55 +170,181 @@ class _FundusScreenState extends State<FundusScreen> {
     }
   }
 
+  Future<void> _navigateToHistoryPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HistoryPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Text(
-              'Fundus Image Classifier',
-              style: TextStyle(
-                fontSize: 24, // Set your desired font size
-                fontWeight: FontWeight.bold, // You can customize the style
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(
+          child: const Text(
+            'Fundus Image Classifier',
+            style: TextStyle(
+              fontSize: 24, // Set your desired font size
+              fontWeight: FontWeight.bold, // You can customize the style
             ),
           ),
-          ElevatedButton(
-            onPressed: _selectImage,
-            child: const Text('Select Image'),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.history),
+            onPressed: () {
+              _navigateToHistoryPage(context);
+            },
           ),
-          const SizedBox(height: 20),
-          if (_selectedImage != null)
-            Image.file(
-              _selectedImage!,
-              height: 200,
-              width: 200,
-            )
-          else
-            const Text('No image selected.'),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _makePrediction,
-            child: const Text('Get Prediction'),
-          ),
-          const SizedBox(height: 20),
-          Text('Prediction: $_prediction \nConfidence level: $_confidence'),
         ],
+      ),
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+            ),
+            ElevatedButton(
+              onPressed: _selectImage,
+              child: const Text('Select Image'),
+            ),
+            const SizedBox(height: 20),
+            if (_selectedImage != null)
+              Image.file(
+                _selectedImage!,
+                height: 200,
+                width: 200,
+              )
+            else
+              const Text('No image selected.'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _makePrediction,
+              child: const Text('Get Prediction'),
+            ),
+            const SizedBox(height: 20),
+            Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+          ],
+        ),
       ),
     );
   }
 }
 
-class MRIScreen extends StatefulWidget {
-  _MRIScreenState createState() => _MRIScreenState();
+class DatabaseHelper {
+  Database? _database;
+
+  Future<void> initializeDatabase() async {
+    if (_database == null) {
+      final dbPath = await getDatabasesPath();
+      //final documentsDirectory = await getApplicationDocumentsDirectory();
+      final databasePath = join(dbPath, 'Fundus.db');
+
+      _database = await openDatabase(
+        databasePath,
+        onCreate: (db, version) {
+          return db.execute(
+            'CREATE TABLE predictions(id INTEGER PRIMARY KEY, name TEXT, prediction TEXT, confidence REAL)',
+          );
+        },
+        version: 1,
+      );
+    }
+  }
+
+  Future<void> insertData(
+      String name, String prediction, double confidence) async {
+    final db = await database;
+    await db.insert(
+      'predictions',
+      {'name': name, 'prediction': prediction, 'confidence': confidence},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getPredictions() async {
+    final db = await database;
+    return db.query('predictions');
+  }
+
+  Future<void> close() async {
+    final db = await database;
+    db.close();
+  }
+
+  Future<Database> get database async {
+    if (_database == null) {
+      await initializeDatabase();
+    }
+    return _database!;
+  }
 }
 
-class _MRIScreenState extends State<MRIScreen> {
+class HistoryPage extends StatefulWidget {
+  @override
+  _HistoryPageState createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
+  final _databaseHelper = DatabaseHelper();
+
+  List<Map<String, dynamic>> _historyData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistoryData();
+  }
+
+  Future<void> _loadHistoryData() async {
+    final history = await _databaseHelper.getPredictions();
+    setState(() {
+      _historyData = history;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Prediction History'),
+      ),
+      body: ListView.builder(
+        itemCount: _historyData.length,
+        itemBuilder: (context, index) {
+          final prediction = _historyData[index];
+          return ListTile(
+            title: Text('Name: ${prediction['name']}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prediction: ${prediction['prediction']}'),
+                Text('Confidence level: ${prediction['confidence']}'),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class XRayScreen extends StatefulWidget {
+  _XRayScreenState createState() => _XRayScreenState();
+}
+
+class _XRayScreenState extends State<XRayScreen> {
   String _prediction = '';
   double _confidence = 0.0;
   File? _selectedImage;
+  TextEditingController _nameController =
+      TextEditingController(); // Add name controller
+
+  final _databaseHelperX = DatabaseHelperX();
 
   Future<void> _makePrediction() async {
     if (_selectedImage == null) {
@@ -223,6 +368,8 @@ class _MRIScreenState extends State<MRIScreen> {
         setState(() {
           _prediction = data['predicted_class'];
           _confidence = data['confidence'];
+          final name = _nameController.text; // Get the user's name
+          _databaseHelperX.insertData(name, _prediction, _confidence);
         });
       } else {
         throw Exception('Failed to make a prediction.');
@@ -246,42 +393,164 @@ class _MRIScreenState extends State<MRIScreen> {
     }
   }
 
+  Future<void> _navigateToHistoryPageX(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HistoryPageX()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Center(
-            child: Text(
-              'MRI Image Classifier',
-              style: TextStyle(
-                fontSize: 24, // Set your desired font size
-                fontWeight: FontWeight.bold, // You can customize the style
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(
+          child: const Text(
+            'Chest X-Ray Image Classifier',
+            style: TextStyle(
+              fontSize: 25, // Set your desired font size
+              fontWeight: FontWeight.bold, // You can customize the style
             ),
           ),
-          ElevatedButton(
-            onPressed: _selectImage,
-            child: const Text('Select Image'),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.history),
+            onPressed: () {
+              _navigateToHistoryPageX(context);
+            },
           ),
-          const SizedBox(height: 20),
-          if (_selectedImage != null)
-            Image.file(
-              _selectedImage!,
-              height: 200,
-              width: 200,
-            )
-          else
-            const Text('No image selected.'),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _makePrediction,
-            child: const Text('Get Prediction'),
-          ),
-          const SizedBox(height: 20),
-          Text('Prediction: $_prediction \nConfidence level: $_confidence'),
         ],
+      ),
+      body: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _nameController,
+              decoration: InputDecoration(labelText: 'Name'),
+            ),
+            ElevatedButton(
+              onPressed: _selectImage,
+              child: const Text('Select Image'),
+            ),
+            const SizedBox(height: 20),
+            if (_selectedImage != null)
+              Image.file(
+                _selectedImage!,
+                height: 200,
+                width: 200,
+              )
+            else
+              const Text('No image selected.'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _makePrediction,
+              child: const Text('Get Prediction'),
+            ),
+            const SizedBox(height: 20),
+            Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DatabaseHelperX {
+  Database? _database;
+
+  Future<void> initializeDatabase() async {
+    if (_database == null) {
+      final dbPath = await getDatabasesPath();
+      //final documentsDirectory = await getApplicationDocumentsDirectory();
+      final databasePath = join(dbPath, 'ChestXRay.db');
+
+      _database = await openDatabase(
+        databasePath,
+        onCreate: (db, version) {
+          return db.execute(
+            'CREATE TABLE predictions(id INTEGER PRIMARY KEY, name TEXT, prediction TEXT, confidence REAL)',
+          );
+        },
+        version: 1,
+      );
+    }
+  }
+
+  Future<void> insertData(
+      String name, String prediction, double confidence) async {
+    final db = await database;
+    await db.insert(
+      'predictions',
+      {'name': name, 'prediction': prediction, 'confidence': confidence},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getPredictions() async {
+    final db = await database;
+    return db.query('predictions');
+  }
+
+  Future<void> close() async {
+    final db = await database;
+    db.close();
+  }
+
+  Future<Database> get database async {
+    if (_database == null) {
+      await initializeDatabase();
+    }
+    return _database!;
+  }
+}
+
+class HistoryPageX extends StatefulWidget {
+  @override
+  _HistoryPageStateX createState() => _HistoryPageStateX();
+}
+
+class _HistoryPageStateX extends State<HistoryPageX> {
+  final _databaseHelperX = DatabaseHelperX();
+
+  List<Map<String, dynamic>> _historyData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistoryData();
+  }
+
+  Future<void> _loadHistoryData() async {
+    final history = await _databaseHelperX.getPredictions();
+    setState(() {
+      _historyData = history;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Prediction History'),
+      ),
+      body: ListView.builder(
+        itemCount: _historyData.length,
+        itemBuilder: (context, index) {
+          final prediction = _historyData[index];
+          return ListTile(
+            title: Text('Name: ${prediction['name']}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prediction: ${prediction['prediction']}'),
+                Text('Confidence level: ${prediction['confidence']}'),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -363,7 +632,7 @@ class AboutAppPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'MediPal Lens PRO',
+              'DiagnoTech',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -386,7 +655,7 @@ class AboutAppPage extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Text(
-              "\n\nThe 'MediPal LENS PRO' app is a powerful tool for doctors, leveraging advanced machine learning algorithms\n to analyze patient data, medical images, and symptoms. It aids in the rapid and accurate\nidentification of diseases, providing real-time diagnostic insights, treatment recommendations, \nand relevant medical literature, enhancing clinical decision-making and patient care.",
+              "\n\nThe 'DiagnoTech' app is a powerful tool for doctors, leveraging advanced machine learning algorithms\n to analyze patient data, medical images, and symptoms. It aids in the rapid and accurate\nidentification of diseases, providing real-time diagnostic insights, treatment recommendations, \nand relevant medical literature, enhancing clinical decision-making and patient care.",
               style: TextStyle(
                 fontSize: 18, // Set your desired font size
                 color: Colors.blue,
