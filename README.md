@@ -1,7 +1,7 @@
-# MediPal LENS PRO
+# DiagnoTech
 
-A Windows application built using Flutter which diagnoses diseases based on an ML image classification algorithm .
 Cutting-Edge Medical Image Classifier for Disease Inference: Revolutionizing Healthcare through AI.
+A Windows application built using Flutter which diagnoses diseases based on an ML image classification model .
 
 ## Description
 
@@ -11,7 +11,7 @@ Our medical AI image classifier provides a robust and efficient solution for the
 
 
   ### Multi Modality support:
-  The app accommodates a wide range of medical imaging modalities, including MRI and fundus images, making it versatile and adaptable for different clinical       scenarios.
+  The app accommodates a wide range of medical imaging modalities, including MRI and fundus images, making it versatile and adaptable for different clinical scenarios.
   ### Disease Inference:
 Leveraging machine learning techniques, our classifier is proficient in identifying various diseases and conditions such as tumors, retinal disorders, and more.
   ### Real-time Analysis:
