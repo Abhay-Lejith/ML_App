@@ -35,8 +35,8 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(
-              child: const Text(
+          title: const Center(
+              child: Text(
             'DiagnoTech',
             style: TextStyle(
               fontSize: 35,
@@ -56,7 +56,7 @@ class _MyAppState extends State<MyApp> {
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
-          items: [
+          items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
@@ -88,13 +88,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'DiagnoTech',
-            style: TextStyle(
-              fontSize: 40, // Set your desired font size
-              fontWeight: FontWeight.bold, // You can customize the style
-              color: Colors.red,
-            ),
+          Container(
+            width: 550, // Set your desired width and height
+            height: 550,
+            child: Image.asset(
+                'assets/DiagnoTech Logo.jpg'), // Use the asset path you specified in pubspec.yaml
           ),
           // Text(
           //   "\n\nThe 'MediPal LENS PRO' app is a powerful tool for doctors, leveraging advanced machine learning algorithms\n to analyze patient data, medical images, and symptoms. It aids in the rapid and accurate\nidentification of diseases, providing real-time diagnostic insights, treatment recommendations, \nand relevant medical literature, enhancing clinical decision-making and patient care.",
@@ -181,8 +179,8 @@ class _FundusScreenState extends State<FundusScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(
-          child: const Text(
+        title: const Center(
+          child: Text(
             'Fundus Image Classifier',
             style: TextStyle(
               fontSize: 24, // Set your desired font size
@@ -192,7 +190,7 @@ class _FundusScreenState extends State<FundusScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.history),
+            icon: const Icon(Icons.history),
             onPressed: () {
               _navigateToHistoryPage(context);
             },
@@ -618,7 +616,7 @@ class _NavigationDrawerScreen extends State<NavigationDrawer> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          DrawerHeader(
+          const DrawerHeader(
             decoration: BoxDecoration(
               color: Colors.blue,
             ),
@@ -631,8 +629,8 @@ class _NavigationDrawerScreen extends State<NavigationDrawer> {
             ),
           ),
           ListTile(
-            leading: Icon(Icons.info),
-            title: Text('About App'),
+            leading: const Icon(Icons.info),
+            title: const Text('About App'),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => AboutAppPage()),
@@ -642,8 +640,8 @@ class _NavigationDrawerScreen extends State<NavigationDrawer> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.help),
-            title: Text('Help'),
+            leading: const Icon(Icons.help),
+            title: const Text('Help'),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => AboutHelpPage()),
@@ -653,8 +651,8 @@ class _NavigationDrawerScreen extends State<NavigationDrawer> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.library_books),
-            title: Text('References'),
+            leading: const Icon(Icons.library_books),
+            title: const Text('References'),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => AboutReferencePage()),
@@ -674,10 +672,10 @@ class AboutAppPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('About App'),
+        title: const Text('About App'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -751,10 +749,10 @@ class AboutHelpPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Help'),
+        title: const Text('Help'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [Text('Help')],
@@ -769,10 +767,10 @@ class AboutReferencePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Help'),
+        title: const Text('Help'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

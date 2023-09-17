@@ -18,13 +18,13 @@ def predict_fundus():
     try:
         class_labels = []
 
-        with open('labels.txt', 'r') as file:
+        with open('fundus_v2_labels.txt', 'r') as file:
             for line in file:
                 parts = line.strip().split()
                 if len(parts) > 1:
                     class_labels.append(' '.join(parts[1:]))
 
-        model = load_model('keras_model.h5')
+        model = load_model('fundus_model_v2.h5')
         # Receive image data as base64 and decode it.
         data = request.json.get('image_bytes')
         image_bytes = base64.b64decode(data)
