@@ -201,7 +201,10 @@ class _FundusScreenState extends State<FundusScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+              width: 100,
+            ),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(labelText: 'Name'),
@@ -280,6 +283,11 @@ class DatabaseHelper {
     }
     return _database!;
   }
+
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.delete('predictions');
+  }
 }
 
 class HistoryPage extends StatefulWidget {
@@ -305,11 +313,23 @@ class _HistoryPageState extends State<HistoryPage> {
     });
   }
 
+  void _clearHistory() async {
+    final databaseHelper = DatabaseHelper();
+    await databaseHelper.clearDatabase();
+    _loadHistoryData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Prediction History'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: _clearHistory,
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: _historyData.length,
@@ -431,7 +451,10 @@ class _XRayScreenState extends State<XRayScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 20,
+              width: 100,
+            ),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(labelText: 'Name'),
@@ -513,6 +536,11 @@ class DatabaseHelperX {
     }
     return _database!;
   }
+
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.delete('predictions');
+  }
 }
 
 class HistoryPageX extends StatefulWidget {
@@ -538,11 +566,23 @@ class _HistoryPageStateX extends State<HistoryPageX> {
     });
   }
 
+  void _clearHistory() async {
+    final databaseHelperX = DatabaseHelperX();
+    await databaseHelperX.clearDatabase();
+    _loadHistoryData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Prediction History'),
+        title: Text('Prediction History'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: _clearHistory,
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: _historyData.length,
