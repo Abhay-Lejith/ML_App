@@ -50,12 +50,20 @@ class _MyAppState extends State<MyApp> {
             HomeScreen(),
             FundusScreen(),
             XRayScreen(),
+            AlzheimerScreen(),
           ],
         ),
         drawer: NavigationDrawer(),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: _onTabTapped,
+          unselectedItemColor: Colors.grey, // Set color for unselected icons
+          selectedItemColor: Colors.blue, // Set color for selected icon
+          selectedLabelStyle:
+              TextStyle(color: Colors.blue), // Set color for selected label
+          unselectedLabelStyle:
+              TextStyle(color: Colors.grey), // Set color for unselected label
+          type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -67,7 +75,11 @@ class _MyAppState extends State<MyApp> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.science),
-              label: 'Chest X-Ray',
+              label: 'Chest X-ray',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.medical_services),
+              label: 'Alzheimer',
             ),
           ],
         ),
@@ -116,8 +128,10 @@ class _FundusScreenState extends State<FundusScreen> {
   String _prediction = '';
   double _confidence = 0.0;
   File? _selectedImage;
-  TextEditingController _nameController =
-      TextEditingController(); // Add name controller
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _ageController = TextEditingController();
+  TextEditingController _sexController = TextEditingController();
+  // Add name controller
 
   final _databaseHelper = DatabaseHelper();
 
@@ -143,8 +157,10 @@ class _FundusScreenState extends State<FundusScreen> {
         setState(() {
           _prediction = data['predicted_class'];
           _confidence = data['confidence'];
-          final name = _nameController.text; // Get the user's name
-          _databaseHelper.insertData(name, _prediction, _confidence);
+          final name = _nameController.text;
+          final age = int.parse(_ageController.text);
+          final sex = _sexController.text; // Get the user's name
+          _databaseHelper.insertData(name, age, sex, _prediction, _confidence);
         });
       } else {
         throw Exception('Failed to make a prediction.');
@@ -197,39 +213,60 @@ class _FundusScreenState extends State<FundusScreen> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(
-              height: 20,
-              width: 100,
-            ),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
-            ),
-            ElevatedButton(
-              onPressed: _selectImage,
-              child: const Text('Select Image'),
-            ),
-            const SizedBox(height: 20),
-            if (_selectedImage != null)
-              Image.file(
-                _selectedImage!,
-                height: 200,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(
+                height: 20,
+                width: 100,
+              ),
+              SizedBox(
                 width: 200,
-              )
-            else
-              const Text('No image selected.'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _makePrediction,
-              child: const Text('Get Prediction'),
-            ),
-            const SizedBox(height: 20),
-            Text('Prediction: $_prediction \nConfidence level: $_confidence'),
-          ],
+                child: TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Name'),
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: TextFormField(
+                  controller: _ageController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'Age'),
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: TextFormField(
+                  controller: _sexController,
+                  decoration: InputDecoration(labelText: 'Sex'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _selectImage,
+                child: const Text('Select Image'),
+              ),
+              const SizedBox(height: 20),
+              if (_selectedImage != null)
+                Image.file(
+                  _selectedImage!,
+                  height: 200,
+                  width: 200,
+                )
+              else
+                const Text('No image selected.'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _makePrediction,
+                child: const Text('Get Prediction'),
+              ),
+              const SizedBox(height: 20),
+              Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+            ],
+          ),
         ),
       ),
     );
@@ -243,13 +280,13 @@ class DatabaseHelper {
     if (_database == null) {
       final dbPath = await getDatabasesPath();
       //final documentsDirectory = await getApplicationDocumentsDirectory();
-      final databasePath = join(dbPath, 'Fundus.db');
+      final databasePath = join(dbPath, 'Fundus_v2.db');
 
       _database = await openDatabase(
         databasePath,
         onCreate: (db, version) {
           return db.execute(
-            'CREATE TABLE predictions(id INTEGER PRIMARY KEY, name TEXT, prediction TEXT, confidence REAL)',
+            'CREATE TABLE predictions(id INTEGER PRIMARY KEY, name TEXT, age INTEGER, sex TEXT, prediction TEXT, confidence REAL)',
           );
         },
         version: 1,
@@ -257,12 +294,18 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> insertData(
-      String name, String prediction, double confidence) async {
+  Future<void> insertData(String name, int age, String sex, String prediction,
+      double confidence) async {
     final db = await database;
     await db.insert(
       'predictions',
-      {'name': name, 'prediction': prediction, 'confidence': confidence},
+      {
+        'name': name,
+        'age': age,
+        'sex': sex,
+        'prediction': prediction,
+        'confidence': confidence
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
@@ -335,14 +378,20 @@ class _HistoryPageState extends State<HistoryPage> {
         itemCount: _historyData.length,
         itemBuilder: (context, index) {
           final prediction = _historyData[index];
-          return ListTile(
-            title: Text('Name: ${prediction['name']}'),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Prediction: ${prediction['prediction']}'),
-                Text('Confidence level: ${prediction['confidence']}'),
-              ],
+          return Container(
+            width: 200,
+            height: 150,
+            child: ListTile(
+              title: Text('Name: ${prediction['name']}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Age: ${prediction['age']}'),
+                  Text('Sex: ${prediction['sex']}'),
+                  Text('Prediction: ${prediction['prediction']}'),
+                  Text('Confidence level: ${prediction['confidence']}'),
+                ],
+              ),
             ),
           );
         },
@@ -455,10 +504,14 @@ class _XRayScreenState extends State<XRayScreen> {
               height: 20,
               width: 100,
             ),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
+            SizedBox(
+              width: 200,
+              child: TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Name'),
+              ),
             ),
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: _selectImage,
               child: const Text('Select Image'),
@@ -596,6 +649,287 @@ class _HistoryPageStateX extends State<HistoryPageX> {
                 Text('Prediction: ${prediction['prediction']}'),
                 Text('Confidence level: ${prediction['confidence']}'),
               ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class AlzheimerScreen extends StatefulWidget {
+  @override
+  _AlzheimerScreenState createState() => _AlzheimerScreenState();
+}
+
+class _AlzheimerScreenState extends State<AlzheimerScreen> {
+  String _prediction = '';
+  double _confidence = 0.0;
+  File? _selectedImage;
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _ageController = TextEditingController();
+  TextEditingController _sexController =
+      TextEditingController(); // Add name controller
+
+  final _databaseHelperA = DatabaseHelperA();
+
+  Future<void> _makePrediction() async {
+    if (_selectedImage == null) {
+      print('No image selected.');
+      return;
+    }
+
+    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict/alzheimer');
+
+    try {
+      final List<int> imageBytes = _selectedImage!.readAsBytesSync();
+
+      final response = await http.post(
+        apiUrl,
+        body: jsonEncode({'image_bytes': base64Encode(imageBytes)}),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _prediction = data['predicted_class'];
+          _confidence = data['confidence'];
+          final name = _nameController.text; // Get the user's name
+          final age = int.parse(_ageController.text);
+          final sex = _sexController.text; // Get the user's name
+          _databaseHelperA.insertData(name, age, sex, _prediction, _confidence);
+        });
+      } else {
+        throw Exception('Failed to make a prediction.');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  Future<void> _selectImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedImage = File(result.files.single.path!);
+        _prediction = '';
+        _confidence; // Clear any previous prediction.
+      });
+    }
+  }
+
+  Future<void> _navigateToHistoryPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HistoryPageA()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Center(
+          child: Text(
+            'Alzheimer Classifier',
+            style: TextStyle(
+              fontSize: 24, // Set your desired font size
+              fontWeight: FontWeight.bold, // You can customize the style
+            ),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              _navigateToHistoryPage(context);
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(
+                height: 20,
+                width: 100,
+              ),
+              SizedBox(
+                width: 200,
+                child: TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Name'),
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: TextFormField(
+                  controller: _ageController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'Age'),
+                ),
+              ),
+              SizedBox(
+                width: 200,
+                child: TextFormField(
+                  controller: _sexController,
+                  decoration: InputDecoration(labelText: 'Sex'),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _selectImage,
+                child: const Text('Select Image'),
+              ),
+              const SizedBox(height: 20),
+              if (_selectedImage != null)
+                Image.file(
+                  _selectedImage!,
+                  height: 200,
+                  width: 200,
+                )
+              else
+                const Text('No image selected.'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _makePrediction,
+                child: const Text('Get Prediction'),
+              ),
+              const SizedBox(height: 20),
+              Text('Prediction: $_prediction \nConfidence level: $_confidence'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DatabaseHelperA {
+  Database? _database;
+
+  Future<void> initializeDatabase() async {
+    if (_database == null) {
+      final dbPath = await getDatabasesPath();
+      //final documentsDirectory = await getApplicationDocumentsDirectory();
+      final databasePath = join(dbPath, 'Alzheimer_v2.db');
+
+      _database = await openDatabase(
+        databasePath,
+        onCreate: (db, version) {
+          return db.execute(
+            'CREATE TABLE predictions(id INTEGER PRIMARY KEY, name TEXT, age INTEGER, sex TEXT, prediction TEXT, confidence REAL)',
+          );
+        },
+        version: 1,
+      );
+    }
+  }
+
+  Future<void> insertData(String name, int age, String sex, String prediction,
+      double confidence) async {
+    final db = await database;
+    await db.insert(
+      'predictions',
+      {
+        'name': name,
+        'age': age,
+        'sex': sex,
+        'prediction': prediction,
+        'confidence': confidence
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getPredictions() async {
+    final db = await database;
+    return db.query('predictions');
+  }
+
+  Future<void> close() async {
+    final db = await database;
+    db.close();
+  }
+
+  Future<Database> get database async {
+    if (_database == null) {
+      await initializeDatabase();
+    }
+    return _database!;
+  }
+
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.delete('predictions');
+  }
+}
+
+class HistoryPageA extends StatefulWidget {
+  @override
+  _HistoryPageStateA createState() => _HistoryPageStateA();
+}
+
+class _HistoryPageStateA extends State<HistoryPageA> {
+  final _databaseHelperA = DatabaseHelperA();
+
+  List<Map<String, dynamic>> _historyData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistoryData();
+  }
+
+  Future<void> _loadHistoryData() async {
+    final history = await _databaseHelperA.getPredictions();
+    setState(() {
+      _historyData = history;
+    });
+  }
+
+  void _clearHistory() async {
+    final databaseHelperA = DatabaseHelperA();
+    await databaseHelperA.clearDatabase();
+    _loadHistoryData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Prediction History'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: _clearHistory,
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: _historyData.length,
+        itemBuilder: (context, index) {
+          final prediction = _historyData[index];
+          return Container(
+            width: 200,
+            height: 150,
+            child: ListTile(
+              title: Text('Name: ${prediction['name']}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Age: ${prediction['age']}'),
+                  Text('Sex: ${prediction['sex']}'),
+                  Text('Prediction: ${prediction['prediction']}'),
+                  Text('Confidence level: ${prediction['confidence']}'),
+                ],
+              ),
             ),
           );
         },
