@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
           children: [
             HomeScreen(),
             FundusScreen(),
-            XRayScreen(),
+            lung_colonScreen(),
             AlzheimerScreen(),
           ],
         ),
@@ -75,7 +75,7 @@ class _MyAppState extends State<MyApp> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.science),
-              label: 'Chest X-ray',
+              label: 'Lung/Colon Cancer',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.medical_services),
@@ -400,15 +400,13 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 }
 
-class XRayScreen extends StatefulWidget {
-  _XRayScreenState createState() => _XRayScreenState();
+class lung_colonScreen extends StatefulWidget {
+  _lung_colonScreenState createState() => _lung_colonScreenState();
 }
 
-class _XRayScreenState extends State<XRayScreen> {
+class _lung_colonScreenState extends State<lung_colonScreen> {
   String _prediction1 = '';
   double _confidence1 = 0.0;
-  String _prediction2 = '';
-  double _confidence2 = 0.0;
 
   File? _selectedImage;
   TextEditingController _nameController =
@@ -422,7 +420,7 @@ class _XRayScreenState extends State<XRayScreen> {
       return;
     }
 
-    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict/xray');
+    final apiUrl = Uri.parse('http://127.0.0.1:5000/predict/lungcolon');
 
     try {
       final List<int> imageBytes = _selectedImage!.readAsBytesSync();
@@ -436,10 +434,8 @@ class _XRayScreenState extends State<XRayScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _prediction1 = data['predicted_class_1'];
-          _confidence1 = data['confidence_1'];
-          _prediction2 = data['predicted_class_2'];
-          _confidence2 = data['confidence_2'];
+          _prediction1 = data['predicted_class'];
+          _confidence1 = data['confidence'];
           final name = _nameController.text; // Get the user's name
           _databaseHelperX.insertData(name, _prediction1, _confidence1);
         });
@@ -461,8 +457,6 @@ class _XRayScreenState extends State<XRayScreen> {
         _selectedImage = File(result.files.single.path!);
         _prediction1 = '';
         _confidence1;
-        _prediction2 = '';
-        _confidence2; // Clear any previous prediction.
       });
     }
   }
@@ -480,7 +474,7 @@ class _XRayScreenState extends State<XRayScreen> {
       appBar: AppBar(
         title: Center(
           child: const Text(
-            'Chest X-Ray Image Classifier',
+            'Lung/Colon Cancer Image Classifier',
             style: TextStyle(
               fontSize: 25, // Set your desired font size
               fontWeight: FontWeight.bold, // You can customize the style
@@ -531,10 +525,7 @@ class _XRayScreenState extends State<XRayScreen> {
               child: const Text('Get Prediction'),
             ),
             const SizedBox(height: 20),
-            Text(
-                'Prediction 1: $_prediction1 \nConfidence level: $_confidence1'),
-            Text(
-                'Prediction 2: $_prediction2 \nConfidence level: $_confidence2'),
+            Text('Prediction: $_prediction1 \nConfidence level: $_confidence1'),
           ],
         ),
       ),
@@ -549,7 +540,7 @@ class DatabaseHelperX {
     if (_database == null) {
       final dbPath = await getDatabasesPath();
       //final documentsDirectory = await getApplicationDocumentsDirectory();
-      final databasePath = join(dbPath, 'ChestXRay.db');
+      final databasePath = join(dbPath, 'lung_colon.db');
 
       _database = await openDatabase(
         databasePath,

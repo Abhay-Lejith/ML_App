@@ -67,63 +67,50 @@ def predict_fundus():
         print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
     
-def predict_xray():
+def predict_cancer():
     try:
         class_labels = []
 
-        with open('xray_labels.txt', 'r') as file:
+        with open('LungColonLabels.txt', 'r') as file:
             for line in file:
                 parts = line.strip().split()
                 if len(parts) > 1:
                     class_labels.append(' '.join(parts[1:]))
 
-        model = load_model('xray_model_v2.h5')
+        model = load_model('LungColonCancer.h5')
         # Receive image data as base64 and decode it.
         data = request.json.get('image_bytes')
         image_bytes = base64.b64decode(data)
 
         # Convert to PIL Image.
         image = Image.open(BytesIO(image_bytes))
-    
-        # Ensure image is in grayscale mode
-        if image.mode != 'L':
-            image = image.convert('L')
-        
-        # Resize the image to (128, 128)
-        image = ImageOps.fit(image, (128,128))
-        
-        # Apply CLAHE to enhance contrast (consistent with training)
-        image = equalize_adapthist(np.asarray(image))
-        
-        # Convert the image to a numpy array and expand dimensions
-        image = np.expand_dims(image, axis=-1)
-        
-        # Prepare the data array
-        data = np.ndarray(shape=(1, 128, 128, 1), dtype=np.float32)
-        data[0] = image
-        
+
+        data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+        # Preprocess the image as needed for your model.
+        # Example:
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+
+        image = ImageOps.fit(image, (224,224), Image.Resampling.LANCZOS)
+        image_ = np.asarray(image)
+        # image = image / 255.0  # Normalize the pixel values
+        n_image = (image_.astype(np.float32) / 127.5) - 1
+        # image = np.expand_dims(image, axis=0)  # Add batch dimension
+
+        data[0] = n_image
+
         # Make predictions with your model.
         predictions = model.predict(data)
 
-        # Sort the predictions in descending order
-        sorted_predictions = np.argsort(predictions[0])[::-1]
+        predicted_class_index = np.argmax(predictions)
 
-        # Get the top two predicted class indices and their corresponding confidence levels
-        top1_class_index = sorted_predictions[0]
-        top2_class_index = sorted_predictions[1]
+        predicted_class_name = class_labels[predicted_class_index]
 
-        top1_class = class_labels[top1_class_index]
-        top2_class = class_labels[top2_class_index]
-
-        confidence_1 = float(predictions[0][top1_class_index])
-        confidence_2 = float(predictions[0][top2_class_index])
-
+        confidence = float(predictions[0][predicted_class_index])
 
         response = {
-            'predicted_class_1': top1_class,
-            'predicted_class_2':top2_class,
-            'confidence_1': confidence_1,
-            'confidence_2': confidence_2,
+            'predicted_class': predicted_class_name,
+            'confidence': confidence,
         }
 
 
@@ -193,8 +180,8 @@ def predict_alzheimer():
 def predict(img):
     if(img == 'fundus'):
         response = predict_fundus()
-    elif(img == 'xray'):
-        response = predict_xray()
+    elif(img == 'lungcolon'):
+        response = predict_cancer()
     elif(img == 'alzheimer'):
         response =predict_alzheimer()
     return response
