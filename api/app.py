@@ -77,7 +77,7 @@ def predict_cancer():
                 if len(parts) > 1:
                     class_labels.append(' '.join(parts[1:]))
 
-        model = load_model('LungColonCancer.h5')
+        model = load_model('LungColon.h5')
         # Receive image data as base64 and decode it.
         data = request.json.get('image_bytes')
         image_bytes = base64.b64decode(data)
@@ -91,13 +91,13 @@ def predict_cancer():
         if image.mode != 'RGB':
             image = image.convert('RGB')
 
-        image = ImageOps.fit(image, (224,224), Image.Resampling.LANCZOS)
+        image = ImageOps.fit(image, (224,224))
         image_ = np.asarray(image)
         # image = image / 255.0  # Normalize the pixel values
-        n_image = (image_.astype(np.float32) / 127.5) - 1
+        #n_image = (image_.astype(np.float32) / 127.5) - 1
         # image = np.expand_dims(image, axis=0)  # Add batch dimension
 
-        data[0] = n_image
+        data[0] = image_
 
         # Make predictions with your model.
         predictions = model.predict(data)
